@@ -2,6 +2,10 @@
 name = "rasta"
 version = "0.1.0"
 edition = "2021"
+respository = "https://github.com/zzjrabbit/rasta"
+description = "UAST implemention"
+license = "MIT/Apache-2.0"
+keywords = ["uast"]
 
 [dependencies]
 serde = "1.0.207"
