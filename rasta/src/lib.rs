@@ -12,14 +12,17 @@ pub use types::*;
 
 use serde_derive::*;
 
+/// Serialize the given AST
 pub fn serialize(unit: &CompUnit) -> Vec<u8> {
     rmp_serde::to_vec(unit).unwrap()
 }
 
+/// Desialize the given AST
 pub fn deserialize(data: Vec<u8>) -> CompUnit {
     rmp_serde::from_slice(&data).unwrap()
 }
 
+/// The span of the code
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Span {
     start: (usize,usize),

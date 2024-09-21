@@ -1,11 +1,13 @@
 use super::*;
 
+/// The function attributes
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Attributes {
     pub attrs: Vec<String>,
     pub span: Span,
 }
 
+/// The function definitions
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FuncDef {
     pub func_type: VType,
@@ -14,6 +16,7 @@ pub struct FuncDef {
     pub span: Span,
 }
 
+/// Proto function definitions
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ProtoDef {
     pub func_type: VType,

@@ -1,0 +1,95 @@
+comp_unit = { soi~(const_decl | builtin_function_call | inline_asm)*~eoi }
+soi = {SOI}
+eoi = {EOI}
+
+block = { "{" ~ (stmt | decl)* ~ "}" }
+
+vtype_enum = { ("u64" | "i8" | "void" | ident) }
+vtype      = { vtype_enum ~ (star)* }
+star = {"*"}
+
+func_def  = {
+    ("fn" ~ "(" ~ ")" ~ "->" ~ vtype ~ block | "fn" ~ "(" ~ param ~ ("," ~ param)* ~ ","? ~ ")" ~ "->" ~ vtype ~ block)
+}
+proto_def = {
+    ("fn" ~ "(" ~ ")" ~ "->" ~ vtype | "fn" ~ "(" ~ param ~ ("," ~ param)* ~ ","? ~ ")" ~ "->" ~ vtype)
+}
+param     = { "arg" ~ ident ~ ":" ~ vtype }
+
+decl = { (const_decl | var_decl) }
+
+attributes     = { "#[" ~ ident ~ ("," ~ ident)* ~ ","? ~ "]" }
+const_decl     = { (attributes)? ~ "const" ~ ident ~ "=" ~ const_init_val ~ ";" }
+const_init_val = { func_def | proto_def | class_def | const_exp }
+
+class_member = { ident ~ ":" ~ vtype }
+class_def    = {
+    ("class" ~ "{" ~ (const_decl)* ~ "}" | "class" ~ "{" ~ class_member ~ ("," ~ class_member)* ~ ","? ~ (const_decl)* ~ "}")
+}
+
+array_def = {
+    ("[" ~ (values ~ ("," ~ values)* ~ ","?)? ~ "]") | ("[" ~ values ~ ";" ~ const_exp ~ "]")
+}
+
+var_decl = { "var" ~ ident ~ ":" ~ vtype ~ "=" ~ init_val ~ ";" }
+init_val = { values }
+
+new_class_member = { ident ~ ":" ~ exp }
+new_class        = {
+    (ident ~ "{" ~ "}" | ident ~ "{" ~ new_class_member ~ ("," ~ new_class_member)* ~ ","? ~ "}")
+}
+
+stmt = { (return | assign | block | if | while | inline_asm | terminator | for | (exp ~ ";") | ";") }
+
+for        = { "for" ~ ident ~ "in" ~ "(" ~ exp ~ "," ~ exp ~ "," ~ exp ~ ")" ~ block }
+terminator = { ("break" | "continue") ~ ";" }
+while      = { "while" ~ exp ~ block }
+
+asm_constraint = { (("in" ~ ident ~ "=" ~ exp) | ("out" ~ ident ~ "=" ~ ident)) }
+inline_asm     = {
+    "asm" ~ "(" ~ string ~ ("," ~ asm_constraint)* ~ ","? ~ ")" ~ ";"
+}
+
+return = { "return" ~ (exp)? ~ ";" }
+if     = { "if" ~ exp ~ block ~ ("else" ~ block)? }
+assign = { (deref ~ "=" ~ exp ~ ";") | (lval ~ "=" ~ exp ~ ";") }
+
+builtin_function      = { "do_magic" | "module" | "first_module" }
+builtin_function_call = {
+    "[" ~ builtin_function ~ "]" ~ "(" ~ (exp ~ ("," ~ exp)* ~ ","?)? ~ ")"
+}
+
+const_exp =  { exp }
+exp       =  { prefix* ~ primary ~ postfix* ~ (infix ~ prefix* ~ primary ~ postfix*)* }
+infix     = _{ add | sub | mul | div | mod | eq | neq }
+add       =  { "+" }
+sub       =  { "-" }
+mul       =  { "*" }
+div       =  { "/" }
+mod       =  { "%" }
+eq        =  { "==" }
+neq       =  { "!=" }
+prefix    = _{ neg | pos }
+pos       =  { "+" }
+neg       =  { "-" }
+postfix   = _{ "NOT_IMPLEMENTEDJLOGHjldj;sjefoaw90298" }
+primary   =  _{ deref|("(" ~ exp ~ ")") | number | func_call | lval | deref | builtin_function_call | get_addr }
+
+lval      = { ident }
+deref     = { ("*" ~ lval) | ("*" ~ "(" ~ exp ~ ")") | ("(" ~ exp ~ ")" ~ "[" ~ exp ~ "]") | (lval ~ "[" ~ exp ~ "]") }
+get_addr  = { "&" ~ lval }
+func_call = { ident ~ "(" ~ (values ~ ("," ~ values)* ~ ","?)? ~ ")" }
+values    = _{ (string | new_class | exp | array_def) }
+
+WHITESPACE = _{ " " | "\t" | "\n" }
+ident      = @{ (ALPHABETIC | NUMBER)+ }
+string     = ${ "\"" ~ inner ~ "\"" }
+inner      = @{ char* }
+char       =  {
+    !("\"" | "\\") ~ ANY
+  | "\\" ~ ("\"" | "\\" | "/" | "b" | "f" | "n" | "r" | "t")
+  | "\\" ~ ("u" ~ ASCII_HEX_DIGIT{4})
+}
+number     = @{
+    "-"? ~ ("0" | ASCII_NONZERO_DIGIT ~ ASCII_DIGIT*) ~ ("." ~ ASCII_DIGIT*)? ~ (^"e" ~ ("+" | "-")? ~ ASCII_DIGIT+)?
+}
