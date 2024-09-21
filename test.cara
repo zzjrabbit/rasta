@@ -1,0 +1,4 @@
+#[top]
+const Machine = fn (arg a: u64, arg b: u64) -> u64 {
+    return a * b;
+};
